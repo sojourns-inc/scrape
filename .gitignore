@@ -1,0 +1,11 @@
+# Secrets
+.env
+
+# Code
+.vscode
+
+# Python
+__pycache__
+
+# Mac
+.DS_Store

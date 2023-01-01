@@ -1,0 +1,24 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+beautifulsoup4 = "*"
+requests = "*"
+lxml = "*"
+tex2py = "*"
+texsoup = "*"
+falcon = "*"
+cython = "*"
+uvicorn = "*"
+pymongo = {extras = ["srv"], version = "*"}
+python-dotenv = "*"
+xmltodict = "*"
+openai = "*"
+atoma = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"

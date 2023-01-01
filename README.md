@@ -3,7 +3,8 @@
 A proxy server for on-the-fly scraping of drug/trip/interaction data for Sojourn's future R&D.
 
 ### Setup instructions (dev)
---
+---
+
 1. Run from Terminal:
 
 ```bash

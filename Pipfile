@@ -17,6 +17,7 @@ python-dotenv = "*"
 xmltodict = "*"
 openai = "*"
 atoma = "*"
+gunicorn = "*"
 
 [dev-packages]
 

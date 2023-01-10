@@ -89,15 +89,18 @@ class ErowidReportsResource:
             resp.body = json.dumps(existing)
         else:
             report = fetch_report(id=report_id)
+            if "faulty" in report:
+                resp.status = falcon.HTTP_200
+                resp.body = json.dumps(report)
+            else:
+                db["erowid-1"].insert_one(report)
+                existing = db["erowid-1"].find_one(
+                    {"extra.exp_id": (report_id)}
+                )
+                del existing['_id']
 
-            db["erowid-1"].insert_one(report)
-            existing = db["erowid-1"].find_one(
-                {"extra.exp_id": (report_id)}
-            )
-            del existing['_id']
-
-            resp.status = falcon.HTTP_200
-            resp.body = json.dumps(existing)
+                resp.status = falcon.HTTP_200
+                resp.body = json.dumps(existing)
 
 
 class WorbleResource:

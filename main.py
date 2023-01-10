@@ -5,6 +5,8 @@ import xmltodict
 from urllib.request import Request, urlopen, HTTPError
 import requests
 from datetime import datetime
+import logging
+
 
 # https://stackoverflow.com/a/67629747
 def isolate_text_body(b: BeautifulSoup):
@@ -28,7 +30,11 @@ def isolate_text_body(b: BeautifulSoup):
 
 def get_doses(b: BeautifulSoup):
     doses = []
-    for row in b.find_all(attrs={"class": "dosechart"})[0].find_all("tr"):
+    dosechart_raw_list = b.find_all(attrs={"class": "dosechart"})
+    dosechart_table = dosechart_raw_list[0] if len(dosechart_raw_list) > 0 else None
+    if dosechart_table is None:
+        return doses
+    for row in dosechart_table.find_all("tr"):
         dose = {}
         for val in row.find_all("td"):
             if (
@@ -77,6 +83,10 @@ def get_doses(b: BeautifulSoup):
 
 def get_foot(b: BeautifulSoup):
     extra = {}
+    foot_raw_list = b.find_all(attrs={"class": "footdata"})
+    foot_table = foot_raw_list[0] if len(foot_raw_list) > 0 else None
+    if foot_table is None:
+        return extra
     for row in b.find_all(attrs={"class": "footdata"})[0].find_all("tr"):
         for val in row.find_all("td"):
             if val.string is None:
@@ -115,15 +125,19 @@ def fetch_report(id: str = ""):
             drug = maybe_drug[0].string
         if len(maybe_weight) > 0:
             weight = maybe_weight[0].string
-        if weight:
+        if weight and weight != "":
+            weight_pair = weight.split(" ")
+            weight_amount = weight_pair[0] if len(weight_pair) > 1 else None
+            weight_units = weight_pair[1] if len(weight_pair) > 1 else None
             weight_data = {
-                "amount": weight.split(" ")[0],
-                "units": weight.split(" ")[1],
+                "amount": weight_amount,
+                "units": weight_units,
             }
-
+        author_a = author.find_all("a")
+        author_name = author_a[0].string if len(author_a) > 0 else None
         trip = {
             "title": title,
-            "author": author.find_all("a")[0].string,
+            "author": author_name,
             "drug": drug,
             "weight": weight_data,
             "dosechart": get_doses(soup),
@@ -134,17 +148,20 @@ def fetch_report(id: str = ""):
 
         return trip
     except IndexError as e:
+        logging.exception(e)
         return {"faulty": full_url}
 
 
 def fetch_shroomery_report(id: str = ""):
-    url = f"https://www.shroomery.org/forums/includes/tooltip/postcontents.php?q=&n={id}"
+    url = (
+        f"https://www.shroomery.org/forums/includes/tooltip/postcontents.php?q=&n={id}"
+    )
 
-    payload={}
+    payload = {}
     headers = {
-        'Cookie': 'PHPMINDMEDIA=mncb3d2e1fcj0ce6gpm19fffbg',
-        'User-Agent': 'PostmanRuntime/7.30.0',
-        'From': 'hi@sernyl.io'
+        "Cookie": "PHPMINDMEDIA=mncb3d2e1fcj0ce6gpm19fffbg",
+        "User-Agent": "PostmanRuntime/7.30.0",
+        "From": "hi@sernyl.io",
     }
     try:
         response = requests.request("GET", url, headers=headers, data=payload)
@@ -153,14 +170,15 @@ def fetch_shroomery_report(id: str = ""):
     except HTTPError as e:
         return {"error": dict(e)}
 
+
 def fetch_shroomery_reports(page: str = ""):
     url = f"https://www.shroomery.org/forums/dosearch.php?forum%5B%5D=f1&words=%28trip+%7C+experience%29+report+-tips&namebox=&replybox=&how=boolean&where=subject&tosearch=main&newerval=&newertype=y&olderval=&oldertype=y&minwords=100&maxwords=&limit=25&sort=r&way=d&page={page}"
     links = []
-    payload={}
+    payload = {}
     headers = {
-        'Cookie': 'PHPMINDMEDIA=mncb3d2e1fcj0ce6gpm19fffbg',
-        'User-Agent': 'PostmanRuntime/7.30.0',
-        'From': 'hi@sernyl.io'
+        "Cookie": "PHPMINDMEDIA=mncb3d2e1fcj0ce6gpm19fffbg",
+        "User-Agent": "PostmanRuntime/7.30.0",
+        "From": "hi@sernyl.io",
     }
     links = []
     reports = []
@@ -174,11 +192,11 @@ def fetch_shroomery_reports(page: str = ""):
         if "showflat.php/Number" in link:
             print(link)
             id = str(link.split("/")[-1:][0])
-        
+
             report = fetch_shroomery_report(id=id)
 
             reports.append(report)
-            
+
     return {"count": len(links), "urls": links, "data": reports}
 
 
@@ -241,26 +259,22 @@ def fetch_reports():
 
         if len(trips) == count:
             break
-    
+
     f = open("sample.json", "w+")
     f.write(json.dumps(trips))
     f.close()
 
     return {"cool": 1}
 
+
 def wordle_latest():
     now = datetime.now()
-
-
     date_time_str = now.strftime("%Y-%m-%d")
-    print(date_time_str)
     url = f"https://www.nytimes.com/svc/wordle/v2/{date_time_str}.json"
-    print(url)
-
 
     headers = {
         "Cookie": "nyt-gdpr=0",
-         "User-Agent": "PostmanRuntime/7.30.0",
+        "User-Agent": "PostmanRuntime/7.30.0",
         "Accept": "*/*",
         "Cache-Control": "no-cache",
         "Host": "www.nytimes.com",
@@ -268,8 +282,5 @@ def wordle_latest():
         "Connection": "keep-alive",
     }
 
-    response = requests.request('GET', url, headers=headers)
-
-    print(response.text)
-
+    response = requests.request("GET", url, headers=headers)
     return response.json()

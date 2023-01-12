@@ -18,6 +18,7 @@ xmltodict = "*"
 openai = "*"
 atoma = "*"
 gunicorn = "*"
+argparse = "*"
 
 [dev-packages]
 

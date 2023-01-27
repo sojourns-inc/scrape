@@ -284,3 +284,75 @@ def wordle_latest():
 
     response = requests.request("GET", url, headers=headers)
     return response.json()
+
+
+def fetch_pihkal(drug: str):
+    url = f"https://isomerdesign.com/PiHKAL/explore.php?domain=pk&id={drug}"
+    page = urlopen(url)
+    soup = BeautifulSoup(page.read(), "lxml")
+
+    with open('pihkal-template.json') as json_file:
+        template_data = json.load(json_file)
+        template_data["general-references"]["links"]["link"][0]["url"] = url
+        
+        t_smiles = {"kind": "SMILES", "value": "", "source": "Isomer Design (PiHKAL)"}
+        t_iupac = {"kind": "IUPAC Name", "value": "", "source": "Isomer Design (PiHKAL)"}
+        t_weights =  {"kind": "Molecular Weights", "value": "", "source": "Isomer Design (PiHKAL)"}
+        t_formula = {"kind": "Molecular Formula", "value": "", "source": "Isomer Design (PiHKAL)"}
+        t_inchi = {"kind": "InChI", "value": "", "source": "Isomer Design (PiHKAL)"}
+
+        maybe_smiles = soup.find_all(attrs={"id": "smiles"})[0].string
+        t_smiles["value"] = maybe_smiles
+
+        maybe_name_list = [li.string for li in soup.find_all(attrs={"class": "name-list"})[0].find_all(attrs={"class": "clippable"})]
+        spans = soup.find_all("span", attrs={"class": "clippable"})
+
+        maybe_iupac = ""
+        if soup.find_all("div", attrs={"class": "name-inline"}).__len__() > 0:
+            maybe_iupac = str(soup.find_all("div", attrs={"class": "name-inline"})[0]).split('<div class="name-inline clippable">')[1].split('<span')[0]
+        else:
+            maybe_iupacs = [str(li).split('<li class="clippable">')[1].split('<span')[0] for li in soup.find_all(attrs={"class": "name-list"})[1].find_all(attrs={"class": "clippable"})]
+            maybe_iupac = maybe_iupacs[0]
+        t_iupac["value"] = maybe_iupac
+        
+        for span in spans:
+            if span.string is not None and len(span.string.split(".")) == 2:
+                t_weights["value"] = span.string
+
+            if (str(span) is not None and "<sub>" in str(span)):
+                t_formula["value"] = str(span).replace('<span class="clippable">', '').replace('</span>', '').replace('<sub>', '').replace('</sub>', '')
+
+            if (str(span) is not None and "InChI=" in str(span)):
+                t_inchi["value"] = str(span).replace('<span class="clippable">', '').replace('</span>', '')
+
+        calc_props = [
+            t_smiles,
+            t_iupac,
+            t_inchi,
+            t_weights,
+            t_formula
+        ]
+
+        name_list = [{"language": "english", "coder": "", "$": name} for name in maybe_name_list]
+
+        template_data["name"] = maybe_name_list[0]
+        template_data["calculated-properties"]["property"] = calc_props
+        template_data["synonyms"]["synonym"] = name_list
+
+        addl_info_list = [            
+            {"2C-B": ""},
+            {"2C-D": ""},
+            {"2C-E": ""},
+            {"2C-H": ""},
+            {"2C-I": ""},
+            {"2C-O": ""},
+            {"2C-P": ""},
+            {"2C-T-2": ""},
+            {"2C-T-7": ""},
+            {"2C-B-FLY": ""},
+            {"2C-B-DRAGONFLY": ""},
+            {"2C-B-BUTTERFLY": ""},
+            {"2C-C-FLY": ""}
+        ]
+
+        return template_data

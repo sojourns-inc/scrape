@@ -19,6 +19,7 @@ openai = "*"
 atoma = "*"
 gunicorn = "*"
 argparse = "*"
+pandas = "*"
 
 [dev-packages]
 

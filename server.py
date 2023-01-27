@@ -2,11 +2,12 @@ import falcon
 import falcon.asgi
 import json
 import urllib.parse
+import traceback
 
 from dotenv import dotenv_values
 from pymongo import MongoClient
 
-from main import fetch_report, fetch_shroomery_report, fetch_shroomery_reports, wordle_latest
+from main import fetch_report, fetch_shroomery_report, fetch_shroomery_reports, fetch_pihkal, wordle_latest
 
 config = dotenv_values(".env")
 
@@ -113,7 +114,35 @@ class WorbleResource:
         resp.set_header('Access-Control-Max-Age', 1728000)  # 20 days
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(wordle_data)
-        
+
+
+class PihkalResource:
+    async def on_get(self, req, resp):
+        """Handles GET requests"""
+        if 'drug' not in req.params:
+            resp.status = falcon.HTTP_400
+            resp.content_type = falcon.MEDIA_TEXT  # Default is JSON, so override
+            resp.text = (
+                'Drug id not provided'
+            )
+            return
+        try:
+            drug = req.params["drug"]
+            drug_data = fetch_pihkal(drug=drug)
+            existing = db["dbank"].find_one(
+                {"name": drug_data["name"]}
+            )
+            if existing is not None:
+                del existing['_id']
+                resp.status = falcon.HTTP_200
+                resp.body = json.dumps(existing)
+            else:
+                # print(drug_data)
+                db["dbank"].insert_one(drug_data)
+                resp.status = falcon.HTTP_200
+                resp.body = json.dumps({"message": "success"})
+        except:
+            traceback.print_exc()
 
 
 # falcon.asgi.App instances are callable ASGI apps...
@@ -124,8 +153,10 @@ app = falcon.asgi.App()
 reports = ErowidReportsResource()
 shroomery_reports = ShroomeryReportsResource()
 worble = WorbleResource()
+pihkal = PihkalResource()
 
 # reports will handle all requests to the '/reports' URL path
 app.add_route('/exp.php', reports)
 app.add_route('/shroomery', shroomery_reports)
 app.add_route('/worble', worble)
+app.add_route('/pihkal', pihkal)

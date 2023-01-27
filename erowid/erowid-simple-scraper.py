@@ -5,9 +5,11 @@ import pathlib
 from datetime import datetime
 
 counter = 0
-for line in fileinput.input("erowid-links-2.csv"):
-    if counter < 50000:
-        result = requests.request("GET", line.rstrip())
+base_url = "http://localhost:8000"
+
+for line in fileinput.input("erowid-links.csv"):
+    if counter < 5000:
+        result = requests.request("GET", f"{base_url}/exp.php?ID={line.rstrip()}")
         counter += 1
         if result.status_code != 200:
             print(result.status_code)

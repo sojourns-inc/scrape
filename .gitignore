@@ -9,3 +9,12 @@ __pycache__
 
 # Mac
 .DS_Store
+analysis/shulgin_effects.txt
+
+*.pem
+
+bluelight/
+
+*.csv
+
+pihkal-template.json

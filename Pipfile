@@ -20,6 +20,7 @@ atoma = "*"
 gunicorn = "*"
 argparse = "*"
 pandas = "*"
+pytz = "*"
 
 [dev-packages]
 

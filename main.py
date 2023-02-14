@@ -4,7 +4,7 @@ import json
 import xmltodict
 from urllib.request import Request, urlopen, HTTPError
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 
@@ -264,11 +264,11 @@ def fetch_reports():
     f.write(json.dumps(trips))
     f.close()
 
-    return {"cool": 1}
+    return {"success": 1}
 
 
 def wordle_latest():
-    now = datetime.now()
+    now = datetime.now(timezone.utc).astimezone()
     date_time_str = now.strftime("%Y-%m-%d")
     url = f"https://www.nytimes.com/svc/wordle/v2/{date_time_str}.json"
 

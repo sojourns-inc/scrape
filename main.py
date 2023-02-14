@@ -5,6 +5,7 @@ import xmltodict
 from urllib.request import Request, urlopen, HTTPError
 import requests
 from datetime import datetime, timezone
+import pytz
 import logging
 
 
@@ -267,9 +268,9 @@ def fetch_reports():
     return {"success": 1}
 
 
-def wordle_latest():
-    now = datetime.now(timezone.utc).astimezone()
-    date_time_str = now.strftime("%Y-%m-%d")
+def wordle_latest(tz: str):
+    naive = datetime.now(tz=pytz.timezone(tz))
+    date_time_str = naive.strftime("%Y-%m-%d")
     url = f"https://www.nytimes.com/svc/wordle/v2/{date_time_str}.json"
 
     headers = {

@@ -107,6 +107,7 @@ class ErowidReportsResource:
 class WorbleResource:
     async def on_get(self, req, resp):
         """Handles GET requests"""
+        print(req.access_route)
         wordle_data = wordle_latest()
         resp.set_header('Access-Control-Allow-Origin', '*')
         resp.set_header('Access-Control-Allow-Methods', '*')
